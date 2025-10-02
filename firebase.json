@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "animaroute-b8c2e-bc9bb",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+*{
+    margin: 0;
+    padding: 0;
+}
+
+html{
+    font-family: "Montserrat";
+    font-size: 12pt;
+    color: black;
+    text-align: center;
+}
+
+body{
+    min-height: 100vh;
+    background-image: url(image/sigupbp.png);
+    background-size: cover;
+    background-position: right;
+    overflow: hidden;
+}
+
+.wrapper{
+    box-sizing: border-box;
+    background-color: rgba(255, 255, 255, 0.897);
+    height: 100vh;
+    width: max(40%, 600px);
+    padding: 10px;
+    border-radius: 0 20px 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.title{
+    font-size: 40px;
+    font-weight: bolder;
+}
+
+form{
+    width: min(400px, 100%);
+    margin-top: 20px;
+    margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+form > div{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+form label{
+    flex-shrink: 0;
+    height: 50px;
+    width: 50px;
+    background-color: #696969;
+    border-radius: 10px 0 0 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+form input{
+    box-sizing: border-box;
+    flex-grow: 1;
+    min-width: 0;
+    height: 50px;
+    padding: 1em;
+    border-radius: 0 10px 10px 0;
+    font-family: "Montserrat";
+    border: 2px solid #ebebeb;
+    border-left: none;
+    background-color: #ebebeb;
+}
+
+.input:hover{
+    border-color: #696969;
+}
+
+.input:focus{
+    outline: none;
+    border-color: #2f2f2f;
+}
+
+div:has(input:focus) > label{
+    background-color: #2f2f2f;
+}
+
+.input::placeholder{
+    color: #828282;
+    font-weight: 500;
+}
+
+.submit{
+    margin-top: 10px;
+    border: none;
+    border-radius: 100px;
+    padding: 15px 50px;
+    background-color: #a8ecc9;
+    color: #ffffff;
+    font-family: "Montserrat";
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.3s;       
+}
+
+.submit:hover{
+    background-color: #009b4b;
+}
+
+a{
+    font-family: "Montserrat";
+    color: #828282;
+    text-decoration: none;
+}
+
+a:hover{
+    text-decoration: underline;
+}
+.link{
+    font-family: "Montserrat";
+    font-weight: 500;
+}
+
+@media(max-width: 1100px){
+    .wrapper{
+        width: min(600px, 100%);
+        border-radius: 0;
+    }
+}
+
+#errorMsg{
+    color: red;
+    font-family: "Montserrat";
+    font-weight: 500;
+}
+
+.wrapper form div.error label{
+    background-color: rgb(255, 143, 143);
+
+}
+
+.wrapper form div.error input{
+    border: 2px solid rgb(255, 143, 143);
+    border-left: none;
+    background-color: #fce1e1;
+}
+
+.input.error::placeholder {
+    color: rgb(255, 143, 143);
+    opacity: 1;
+}

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Animal Map (Shared)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+  html, body { height:100%; margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+  #map { height:80%; width:100%; }
+  #form-container { padding:10px; background:#f4f4f4; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .legend { display:flex; gap:12px; align-items:center; }
+  .dot { width:12px; height:12px; border-radius:50%; display:inline-block; border:2px solid #333; }
+  .locate-control.leaflet-bar a { width:auto; padding:0 8px; font-size:12px; text-decoration:none; }
+  .locating { opacity:0.6; pointer-events:none; }
+</style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div id="form-container">
+    <input type="file" id="imageInput" accept="image/*" />
+    <label>
+      動物：
+      <select id="animalType">
+        <option value="deer">シカ</option>
+        <option value="monkey">サル</option>
+        <option value="boar">イノシシ</option>
+      </select>
+    </label>
+    <span>（地図をクリックでピンを置く）</span>
+
+    <div class="legend">
+      <span class="dot" style="background:#2ecc71"></span>シカ
+      <span class="dot" style="background:#f39c12"></span>サル
+      <span class="dot" style="background:#e74c3c"></span>イノシシ
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-LCzW2hPlP7fNoNCvMnaVws_KIac1kcw",
+      authDomain: "animaroute-b8c2e.firebaseapp.com",
+      projectId: "animaroute-b8c2e",
+      storageBucket: "animaroute-b8c2e.firebasestorage.app",
+      messagingSenderId: "175353624443",
+      appId: "1:175353624443:web:4b6ec67850d9f337d3afde",
+      measurementId: "G-G91XYSFZFZ"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    const map = L.map('map').setView([36.5781, 136.6483], 17);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+
+    const colorMap = { deer:'#2ecc71', monkey:'#f39c12', boar:'#e74c3c' };
+    const labelMap = { deer:'シカ', monkey:'サル', boar:'イノシシ' };
+
+    let userMarker=null, userCircle=null;
+    function makeLocateControl(){
+      const Locate = L.Control.extend({
+        options:{ position:'topleft' },
+        onAdd:function(){
+          const c = L.DomUtil.create('div','locate-control leaflet-bar');
+          const a = L.DomUtil.create('a','',c);
+          a.href='#'; a.textContent='📍 現在地'; a.title='現在地へ移動';
+          L.DomEvent.on(a,'click',(e)=>{ L.DomEvent.stop(e); locateNow(a); });
+          return c;
+        }
+      });
+      return new Locate();
+    }
+    function locateNow(btn){
+      if (!('geolocation' in navigator)) return alert('位置情報が使えません');
+      btn.classList.add('locating'); btn.textContent='取得中…';
+      navigator.geolocation.getCurrentPosition(async (pos)=>{
+        const latlng=[pos.coords.latitude,pos.coords.longitude];
+        const radius=pos.coords.accuracy;
+        if(!userMarker){ userMarker=L.marker(latlng,{title:'現在地'}).addTo(map).bindPopup('現在地'); } else { userMarker.setLatLng(latlng); }
+        if(!userCircle){ userCircle=L.circle(latlng,{radius, color:'#3388ff', weight:2, fillOpacity:0.15}).addTo(map); } else { userCircle.setLatLng(latlng).setRadius(radius); }
+        map.setView(latlng, Math.max(map.getZoom(),16), {animate:true});
+        userMarker.openPopup();
+      },(err)=>alert(err.message),{enableHighAccuracy:true, timeout:10000, maximumAge:0});
+      setTimeout(()=>{ btn.classList.remove('locating'); btn.textContent='📍 現在地'; }, 800);
+    }
+    map.addControl(makeLocateControl());
+
+    let selectedImageDataURL = null; 
+    let selectedFile = null;       
+    imageInput.addEventListener('change', (e)=>{
+      if (e.target.files && e.target.files[0]) {
+        selectedFile = e.target.files[0];
+        const r = new FileReader();
+        r.onload = (ev)=> selectedImageDataURL = ev.target.result;
+        r.readAsDataURL(selectedFile);
+      } else {
+        selectedFile = null;
+        selectedImageDataURL = null;
+      }
+    });
+
+    const rendered = new Map(); 
+    db.collection('pins').orderBy('createdAt','asc').onSnapshot((snap)=>{
+      snap.docChanges().forEach(ch=>{
+        if (ch.type === 'added') {
+          const id = ch.doc.id;
+          if (rendered.has(id)) return;
+          const p = ch.doc.data();
+          const color = colorMap[p.type] || '#555';
+          const latlng = [p.lat, p.lng];
+          const m = L.circleMarker(latlng, {radius:10, color:'#333', weight:2, fillColor:color, fillOpacity:0.9}).addTo(map);
+          m.bindPopup(
+            `<div style="text-align:center;">
+               <div><strong>${labelMap[p.type]||'不明'}</strong></div>
+               ${p.imageUrl ? `<img src="${p.imageUrl}" width="200" style="margin-top:6px;" />` : ''}
+               <div style="font-size:12px;color:#666;margin-top:4px;">${p.createdAt?.toDate ? p.createdAt.toDate().toLocaleString() : ''}</div>
+             </div>`
+          );
+          rendered.set(id, m);
+        }
+      });
+    });
+
+    map.on('click', async (e)=>{
+      if (!selectedFile) return alert('まず画像を選んでください');
+
+      try {
+        const stamp = Date.now();
+        const safeName = (selectedFile.name || 'photo.jpg').replace(/[^\w.\-]/g,'_');
+        const path = `uploads/${stamp}_${safeName}`;
+        const ref = storage.ref().child(path);
+        const snapshot = await ref.put(selectedFile); 
+        const url = await snapshot.ref.getDownloadURL();
+
+        const type = document.getElementById('animalType').value;
+        await db.collection('pins').add({
+          lat: e.latlng.lat,
+          lng: e.latlng.lng,
+          type,
+          imageUrl: url,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        selectedFile = null;
+        selectedImageDataURL = null;
+        imageInput.value = '';
+
+      } catch (err) {
+        console.error(err);
+        alert('アップロードに失敗しました: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

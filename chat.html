@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Region Chat (匿名 + 写真) — 県/市 選択式</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    header { padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top)); border-bottom: 1px solid #ddd; position: sticky; top: 0; background: #fff; z-index: 10; }
+    .wrap { display: grid; grid-template-rows: auto 1fr auto; min-height: 100svh; height: 100dvh; height: -webkit-fill-available; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+    label { font-size: 12px; opacity: .8; }
+    select, input[type="text"] { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; }
+    main { overflow-y: auto; padding: 12px; background: #f7f7f7; }
+    .msg-list { display: grid; gap: 8px; max-width: 900px; margin: 0 auto; }
+    .msg { display: grid; gap: 6px; padding: 10px 12px; border-radius: 12px; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.04); }
+    .meta { font-size: 12px; color: #666; display:flex; justify-content: space-between; gap:8px; align-items:center; }
+    .name { font-weight: 600; }
+    .me { background: #e8f2ff; }
+    .photo { display:block; max-width: 100%; height: auto; border-radius: 10px; }
+    footer { border-top: 1px solid #ddd; padding: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); background: #fff; }
+    textarea { width: 100%; resize: none; padding: 10px 12px; border: 1px solid #ccc; border-radius: 12px; font: inherit; min-height: 44px; max-height: 40dvh; }
+    .sendbar { display:grid; grid-template-columns: auto 1fr auto; gap: 8px; max-width: 900px; margin: 0 auto; align-items: end; }
+    button { padding: 10px 14px; border-radius: 12px; border: 0; background: #2563eb; color: #fff; font-weight: 600; cursor: pointer; }
+    button.icon { padding: 10px 12px; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .hint { font-size: 12px; color:#666; text-align:center; margin-top: 4px; }
+    .badge { font-size:12px; padding:2px 6px; border-radius:999px; background:#eef2ff; color:#1e40af; }
+    .room-badge { font-size:12px; padding:4px 8px; border-radius:999px; background:#f1f5f9; color:#0f172a; }
+    .progress { font-size: 12px; color:#666; text-align:right; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="row" style="gap:12px; align-items:center;">
+        <strong>🗾 Chat</strong>
+        <div class="row" style="margin-left:auto; gap:12px;">
+          <div class="row">
+            <label for="pref">都道府県:</label>
+            <select id="pref"></select>
+          </div>
+          <div class="row">
+            <label for="city">市区町村:</label>
+            <select id="city" disabled>
+              <option value="" selected disabled>市区町村を選択</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="name">Name(任意):</label>
+            <input id="name" type="text" placeholder="表示名を上書き" />
+          </div>
+          <span id="status" class="badge">未ログイン</span>
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px; gap:8px;">
+        <span id="roomBadge" class="room-badge">Room: -</span>
+      </div>
+    </header>
+
+    <main>
+      <div id="messages" class="msg-list"></div>
+    </main>
+
+    <footer>
+      <div class="sendbar">
+        <div class="row" style="gap:6px; align-self:stretch;">
+          <input id="file" type="file" accept="image/*" hidden />
+          <button id="pick" class="icon" title="写真を選ぶ" disabled>📷</button>
+        </div>
+        <textarea id="text" placeholder="メッセージを入力（Enterで送信、Shift+Enterで改行）" disabled></textarea>
+        <button id="send" disabled>送信</button>
+      </div>
+      <div id="progress" class="progress"></div>
+      <div class="hint">※ Firebase（匿名認証 + Firestore + Storage）。<br>選んだ <b>都道府県/市区町村</b> ごとに別ルーム（同じ選択の人同士で会話）。</div>
+    </footer>
+  </div>
+
+  <script type="module">
+    // Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, updateProfile, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, limit, setLogLevel } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-LCzW2hPlP7fNoNCvMnaVws_KIac1kcw",
+      authDomain: "animaroute-b8c2e.firebaseapp.com",
+      projectId: "animaroute-b8c2e",
+      storageBucket: "animaroute-b8c2e.appspot.com",
+      messagingSenderId: "175353624443",
+      appId: "1:175353624443:web:4b6ec67850d9f337d3afde",
+      measurementId: "G-G91XYSFZFZ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    setLogLevel('error');
+
+    const PATH = { ROOT: 'areas', SUB: 'cities', LEAF: 'messages' };
+
+    const els = {
+      status: document.getElementById('status'),
+      name: document.getElementById('name'),
+      pref: document.getElementById('pref'),
+      city: document.getElementById('city'),
+      text: document.getElementById('text'),
+      send: document.getElementById('send'),
+      list: document.getElementById('messages'),
+      pick: document.getElementById('pick'),
+      file: document.getElementById('file'),
+      progress: document.getElementById('progress'),
+      roomBadge: document.getElementById('roomBadge')
+    };
+
+    const PREFS = [
+      '北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県',
+      '茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県',
+      '新潟県','富山県','石川県','福井県','山梨県','長野県',
+      '岐阜県','静岡県','愛知県','三重県',
+      '滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県',
+      '鳥取県','島根県','岡山県','広島県','山口県',
+      '徳島県','香川県','愛媛県','高知県',
+      '福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'
+    ];
+
+    const API_BASE = 'https://japanese-addresses-v2.geoloniamaps.com/api/ja';
+    const CITIES_CACHE = {}; // { [pref]: string[] }
+
+    async function fetchCities(pref) {
+      const url = `${API_BASE}/${encodeURIComponent(pref)}.json`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      return Array.from(new Set((json.data || []).map(x => String(x.city)))).sort();
+    }
+    async function ensureCities(pref) {
+      if (CITIES_CACHE[pref]) return CITIES_CACHE[pref];
+      try {
+        CITIES_CACHE[pref] = await fetchCities(pref);
+      } catch (e) {
+        console.warn('Fetch cities failed, fallback used:', pref, e);
+        const FALLBACK = {
+          '東京都': ['千代田区','中央区','港区','新宿区','渋谷区','世田谷区'],
+          '神奈川県': ['横浜市','川崎市','相模原市'],
+          '大阪府': ['大阪市','堺市'],
+          '愛知県': ['名古屋市','豊田市'],
+          '福岡県': ['福岡市','北九州市']
+        };
+        CITIES_CACHE[pref] = (FALLBACK[pref] || []);
+      }
+      return CITIES_CACHE[pref];
+    }
+
+    function sanitizeKey(s) {
+      const backslash = String.fromCharCode(92);
+      return (s || '').trim().replaceAll('/', '-').replaceAll(backslash, '-');
+    }
+    function buildPrefOptions() {
+      els.pref.replaceChildren();
+      PREFS.forEach(p => els.pref.add(new Option(p, p)));
+    }
+    async function buildCityOptions(pref, keepValue=false) {
+      const cur = keepValue ? els.city.value : '';
+      els.city.replaceChildren();
+      const first = document.createElement('option');
+      first.value = ''; first.textContent = '市区町村を選択'; first.disabled = true; first.selected = true;
+      els.city.append(first);
+      const list = await ensureCities(pref);
+      list.forEach(c => els.city.add(new Option(c, c)));
+      els.city.disabled = list.length === 0;
+      if (keepValue && cur && list.includes(cur)) {
+        els.city.value = cur; els.city.disabled = false; first.selected = false;
+      }
+    }
+    const isCitySelected = () => !!els.city.value;
+    function updateControls() {
+      const can = !!auth.currentUser && isCitySelected();
+      els.send.disabled = !can;
+      els.text.disabled = !can;
+      els.pick.disabled = !can;
+    }
+    function updateRoomBadge() {
+      const pref = els.pref.value || '未選択';
+      const city = els.city.value || '未選択';
+      els.roomBadge.textContent = `Room: ${pref} / ${city}`;
+    }
+
+    signInAnonymously(auth).catch(e => console.error('anonymous sign-in error:', e));
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const short = user.uid.slice(0,6);
+        const name = els.name.value.trim() || `guest-${short}`;
+        els.status.textContent = `Login: ${name}`;
+        if (!user.displayName && els.name.value.trim())
+          updateProfile(user, { displayName: els.name.value.trim() }).catch(()=>{});
+        if (isCitySelected()) subscribeRegion(); // ← ログイン後＆市選択済みなら購読開始
+      } else {
+        els.status.textContent = '未ログイン';
+      }
+      updateControls();
+    });
+
+    let unsubscribe = null;
+    const currentRegion = () => ({ pref: els.pref.value, city: els.city.value });
+    function subscribeRegion() {
+      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+      updateRoomBadge();
+      if (!auth.currentUser || !isCitySelected()) { els.list.replaceChildren(); return; }
+
+      const { pref, city } = currentRegion();
+      const ref = collection(db, PATH.ROOT, pref, PATH.SUB, city, PATH.LEAF);
+      const q = query(ref, orderBy('createdAt', 'desc'), limit(100));
+
+      unsubscribe = onSnapshot(q, (snap) => {
+        const items = [];
+        snap.forEach(doc => items.push(renderMsg(doc.id, doc.data())));
+        els.list.replaceChildren(...items.reverse());
+        requestAnimationFrame(() => { els.list.parentElement.scrollTop = els.list.parentElement.scrollHeight; });
+      }, (err) => {
+        console.error('onSnapshot error:', err);
+        alert('読み取りに失敗: ' + err.message);
+      });
+    }
+
+    els.pref.addEventListener('change', async () => {
+      await buildCityOptions(els.pref.value);
+      updateControls(); updateRoomBadge();
+      if (auth.currentUser) subscribeRegion();
+    });
+    els.city.addEventListener('change', () => {
+      updateControls(); subscribeRegion();
+    });
+    els.name.addEventListener('change', () => {
+      if (auth.currentUser && els.name.value.trim())
+        updateProfile(auth.currentUser, { displayName: els.name.value.trim() }).catch(()=>{});
+    });
+
+    (async () => {
+      buildPrefOptions();
+      els.pref.value = '神奈川県';           // 初期県（好みで変更OK）
+      await buildCityOptions(els.pref.value); // 市の選択肢ロード
+      updateControls();
+      updateRoomBadge();
+    })();
+
+    async function sendMessage() {
+      const body = els.text.value.trim();
+      if (!body) return;
+      if (!auth.currentUser || !isCitySelected()) { alert('県と市区町村を選択してください'); return; }
+      els.send.disabled = true;
+      try {
+        const user = auth.currentUser; const { pref, city } = currentRegion();
+        const ref = collection(db, PATH.ROOT, pref, PATH.SUB, city, PATH.LEAF);
+        await addDoc(ref, {
+          type: 'text', body,
+          name: (els.name.value.trim() || user.displayName || `guest-${user.uid.slice(0,6)}`),
+          uid: user.uid,
+          region: { pref, city },
+          createdAt: serverTimestamp()
+        });
+        els.text.value = '';
+      } catch (e) {
+        console.error('addDoc error:', e);
+        alert('送信に失敗: ' + e.message);
+      } finally {
+        els.send.disabled = false; els.text.focus();
+      }
+    }
+    document.getElementById('send').addEventListener('click', sendMessage);
+    document.getElementById('text').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    document.getElementById('pick').addEventListener('click', () => els.file.click());
+    els.file.addEventListener('change', () => {
+      const file = els.file.files?.[0];
+      if (!file) return;
+      uploadPhoto(file).finally(() => { els.file.value = ''; });
+    });
+    async function uploadPhoto(file) {
+      if (!auth.currentUser || !isCitySelected()) { alert('県と市区町村を選択してください'); return; }
+      const MAX = 10 * 1024 * 1024; // 10MB
+      if (!file.type.startsWith('image/')) { alert('画像ファイルのみアップロードできます'); return; }
+      if (file.size > MAX) { alert('サイズが大きすぎます（最大10MB）'); return; }
+
+      const user = auth.currentUser; const { pref, city } = currentRegion();
+      const ts = Date.now(); const safeCity = sanitizeKey(city);
+      const path = `uploads/${pref}/${safeCity}/${user.uid}/${ts}-${file.name}`;
+      const ref = sRef(storage, path);
+
+      const task = uploadBytesResumable(ref, file, { contentType: file.type });
+      els.progress.textContent = 'アップロード 0%';
+      els.pick.disabled = true; els.send.disabled = true; els.text.disabled = true;
+
+      return new Promise((resolve) => {
+        task.on('state_changed', (snap) => {
+          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+          els.progress.textContent = `アップロード ${pct}%`;
+        }, (err) => {
+          console.error('upload error', err);
+          alert('アップロードに失敗: ' + err.message);
+          els.progress.textContent = '';
+          els.pick.disabled = false; els.send.disabled = false; els.text.disabled = false;
+          resolve();
+        }, async () => {
+          try {
+            const url = await getDownloadURL(task.snapshot.ref);
+            const col = collection(db, PATH.ROOT, pref, PATH.SUB, city, PATH.LEAF);
+            await addDoc(col, {
+              type: 'image', imageUrl: url,
+              imageName: file.name, imageSize: file.size, mime: file.type, storagePath: path,
+              name: (els.name.value.trim() || user.displayName || `guest-${user.uid.slice(0,6)}`),
+              uid: user.uid,
+              region: { pref, city },
+              createdAt: serverTimestamp()
+            });
+          } catch (e) {
+            console.error('save message error', e);
+            alert('メッセージ保存に失敗: ' + e.message);
+          } finally {
+            els.progress.textContent = '';
+            els.pick.disabled = false; els.send.disabled = false; els.text.disabled = false;
+            resolve();
+          }
+        });
+      });
+    }
+
+    function renderMsg(id, m) {
+      const me = auth.currentUser && m.uid === auth.currentUser.uid;
+      const el = document.createElement('div');
+      el.className = 'msg' + (me ? ' me' : '');
+
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const name = document.createElement('span'); name.className = 'name'; name.textContent = m.name || '名無し';
+      const time = document.createElement('time'); time.textContent = formatTs(m.createdAt);
+      meta.append(name, time);
+
+      const body = document.createElement('div');
+      if (m.type === 'image' && m.imageUrl) {
+        const a = document.createElement('a'); a.href = m.imageUrl; a.target = '_blank'; a.rel = 'noopener';
+        const img = document.createElement('img'); img.src = m.imageUrl; img.alt = m.imageName || 'photo'; img.loading = 'lazy'; img.className = 'photo';
+        a.append(img); body.append(a);
+      } else {
+        body.textContent = m.body || '';
+      }
+      el.append(meta, body);
+      return el;
+    }
+    function formatTs(ts) {
+      if (!ts) return '';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(d);
+    }
+  </script>
+</body>
+</html>

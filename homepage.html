@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <link rel="stylesheet" href="homepage.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <header>
+        <div class="logo">あにまる～と</div>
+        <nav>
+            <a href="homepage.html" class="navlink"><i class="fa-solid fa-house"></i>   Home</a>
+            <a href="#" class="navlink"><i class="fa-solid fa-magnifying-glass"></i>   Tracker</a>
+            <a href="map.html" class="navlink"><i class="fa-solid fa-map-location-dot"></i>   Map</a>
+            <a href="chat.html" class="navlink"><i class="fa-solid fa-comments"></i>   Chatroom</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="slides">
+            <div class="slide" id="slide1">
+                <div class="hero-content">
+                    <div class="herotitle">Tracking Algorithm</div>
+                    <p class="herotext">A tool that helps you track smarter and way better.</p>
+                    <button class="explorebutton" onclick="window.location.href='#'">Click to Explore!</button>
+                </div>
+            </div>
+            <div class="slide" id="slide2">
+                <div class="hero-content">
+                    <div class="herotitle">Interactive Maps</div>
+                    <p class="herotext">Find and share animal sightings easily.</p>
+                    <button class="explorebutton" onclick="window.location.href='map.html'">Click to View!</button>
+                </div>
+            </div>
+            <div class="slide" id="slide3">
+                <div class="hero-content">
+                    <div class="herotitle">Online Chatroom</div>
+                    <p class="herotext">Explore online communities and share advice.</p>
+                    <button class="explorebutton" onclick="window.location.href='chat.html'">Click to Chat!</button>
+                </div>
+            </div>
+            <button class="prev"><i class="fa-solid fa-angle-left"></i></button>
+            <button class="next"><i class="fa-solid fa-angle-right"></i></button>
+        </div>
+        <div class="dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="feature">
+            <div class="featuretitle">Tracking Algorithm</div>
+            <p class="featuretext">Helps you track.</p>
+            <a href="#" class="featurelink">Explore</a>
+        </div>
+        <div class="feature">
+            <div class="featuretitle">Interactive Maps</div>
+            <p class="featuretext">Helps you find.</p>
+            <a href="#" class="featurelink">View</a>
+        </div>
+        <div class="feature">
+            <div class="featuretitle">Responsive Design</div>
+            <p class="featuretext">Helps give advice.</p>
+            <a href="#" class="featurelink">Chat</a>
+        </div>
+    </section>
+
+    <script src="homepage.js"></script>
+    
+</body>
+</html>

@@ -118,3 +118,32 @@ body {
         font-size: 28px;
     }
 }
+
+@media screen and (max-width:767px){
+    .logo{
+        max-width: 90%;
+        margin-top: 50px;
+        margin-bottom: 0px;
+    }
+
+    .slogan{
+        font-size: 20px;
+        margin-bottom: 7px;
+    }
+    
+    .button{
+        width: 200px;
+        gap: 20px;
+    }
+
+    .signupButton, .loginButton{
+        padding: 10px 20px;
+        font-size: 25px;
+    }
+
+    .signupButton:hover, .loginButton:hover{
+        padding: 13px 23px;
+        font-size: 28px;
+    }
+}
+
