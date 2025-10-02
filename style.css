@@ -1,0 +1,120 @@
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    background-image: url("image/more..png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.logoContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo{
+    max-width: 60%;
+    height: auto;
+    margin-top: 100px;
+    margin-bottom: 10px;
+}
+
+.slogan{
+    font-size: 37px;
+    font-family: "Montserrat";
+    margin-bottom: 30px;
+    color: white;
+    text-shadow: 2px 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.button{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    width: 270px;
+    height: 200px;
+    gap: 20px;
+}
+
+.signupButton{
+    padding: 10px 30px;
+    font-size: 30px;
+    font-family: "Montserrat";
+    font-weight: bold;
+    background-color: #02a550;
+    color: white;
+    border-radius: 100px;
+    border: 5px solid #02a550;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.signupButton:hover{
+    padding: 18px 33px;
+    font-size: 33px;
+    background-color: #009b4b;
+    border: 5px solid #009b4b;
+    color: #ffffff;
+}
+
+.loginButton{
+    padding: 10px 30px;
+    font-size: 30px;
+    font-family: "Montserrat";
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0);
+    color: black;
+    border-radius: 100px;
+    border: 5px solid black;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.loginButton:hover{
+    padding: 18px 33px;
+    font-size: 33px;
+    background-color: #f7f7f774;
+    color: #000000;
+}
+
+
+
+
+
+
+@media screen and (max-height:600px){
+    .logo{
+        max-width: 50%;
+        margin-top: 50px;
+        margin-bottom: 0px;
+    }
+
+    .slogan{
+        font-size: 30px;
+        margin-bottom: 7px;
+    }
+    
+    .button{
+        width: 200px;
+        gap: 20px;
+    }
+
+    .signupButton, .loginButton{
+        padding: 10px 20px;
+        font-size: 25px;
+    }
+
+    .signupButton:hover, .loginButton:hover{
+        padding: 13px 23px;
+        font-size: 28px;
+    }
+}
