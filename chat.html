@@ -30,6 +30,20 @@
     .badge { font-size:12px; padding:2px 6px; border-radius:999px; background:#eef2ff; color:#1e40af; }
     .room-badge { font-size:12px; padding:4px 8px; border-radius:999px; background:#f1f5f9; color:#0f172a; }
     .progress { font-size: 12px; color:#666; text-align:right; margin-top: 4px; }
+    .returnbutton {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 25px;
+      margin: 0 10px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .returnbutton:hover {
+      background-color: #28a7467b;
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -74,6 +88,7 @@
         <button id="send" disabled>送信</button>
       </div>
       <div id="progress" class="progress"></div>
+      <button class="returnbutton" onclick="window.location.href='homepage.html'">Return to Homepage</button>
       <div class="hint">※ Firebase（匿名認証 + Firestore + Storage）。<br>選んだ <b>都道府県/市区町村</b> ごとに別ルーム（同じ選択の人同士で会話）。</div>
     </footer>
   </div>

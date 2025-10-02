@@ -185,3 +185,26 @@ header nav{
     height: 70vh;
   }
 }
+
+@media (max-width: 480px) {
+    header {
+        display: none;
+    }
+
+    .features {
+        padding: 40px 20px;
+        font-size: 15px;
+    }
+
+    .herotitle {
+        font-size: 30px;
+    }
+
+    .herotext {
+        font-size: 10px;
+    }
+
+    .prev, .next {
+        top: 70%;
+    }
+}

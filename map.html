@@ -13,6 +13,21 @@
   .dot { width:12px; height:12px; border-radius:50%; display:inline-block; border:2px solid #333; }
   .locate-control.leaflet-bar a { width:auto; padding:0 8px; font-size:12px; text-decoration:none; }
   .locating { opacity:0.6; pointer-events:none; }
+  .returnbutton {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 25px;
+    margin: 0 10px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .returnbutton:hover {
+    background-color: #28a7467b;
+    transform: scale(1.05);
+  }
 </style>
 </head>
 <body>
@@ -35,6 +50,7 @@
       <span class="dot" style="background:#f39c12"></span>サル
       <span class="dot" style="background:#e74c3c"></span>イノシシ
     </div>
+    <button class="returnbutton" onclick="window.location.href='homepage.html'">Return to Homepage</button>
   </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
