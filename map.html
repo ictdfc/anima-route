@@ -6,13 +6,45 @@
 <title>Animal Map (Shared)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
-  html, body { height:100%; margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
-  #map { height:80%; width:100%; }
-  #form-container { padding:10px; background:#f4f4f4; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  .legend { display:flex; gap:12px; align-items:center; }
-  .dot { width:12px; height:12px; border-radius:50%; display:inline-block; border:2px solid #333; }
-  .locate-control.leaflet-bar a { width:auto; padding:0 8px; font-size:12px; text-decoration:none; }
-  .locating { opacity:0.6; pointer-events:none; }
+  html, body {
+    height:100%;
+    margin:0;
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  }
+  #map {
+    height:80%;
+    width:100%;
+  }
+  #form-container {
+    padding:10px;
+    background:#f4f4f4;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .legend {
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .dot {
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    display:inline-block;
+    border:2px solid #333;
+  }
+  .locate-control.leaflet-bar a {
+    width:auto;
+    padding:0 8px;
+    font-size:12px;
+    text-decoration:none;
+  }
+  .locating {
+    opacity:0.6;
+    pointer-events:none;
+  }
   .returnbutton {
     background-color: #28a745;
     color: white;

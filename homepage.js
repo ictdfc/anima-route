@@ -31,10 +31,8 @@ function prevSlide() {
 nextBtn.addEventListener("click", nextSlide);
 prevBtn.addEventListener("click", prevSlide);
 
-// Auto slide every 5 seconds
 let slideInterval = setInterval(nextSlide, 7000);
 
-// Click on dots to jump to a slide
 dots.forEach((dot, index) => {
   dot.addEventListener("click", () => {
     currentSlide = index;

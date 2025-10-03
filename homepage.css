@@ -35,7 +35,7 @@ header nav{
     text-decoration: none;
 }
 
-/* Hero Section */
+/*Hero Section*/
 .hero {
     position: relative;
     height: 100vh;
@@ -104,7 +104,7 @@ header nav{
     margin-bottom: 30px;
     text-shadow: 2px 4px 10px rgba(0, 0, 0, 0.285);
 }
-/* slides background picture */
+/*slides*/
 #slide1 {
     background-image: url("image/more..png");
 }
@@ -155,7 +155,7 @@ header nav{
     transform: scale(1.2);
 }
 
-/* Features Section */
+/*Features Section*/
 .features {
     display: flex;
     justify-content: space-around;
